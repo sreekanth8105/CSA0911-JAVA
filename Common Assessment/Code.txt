@@ -1,0 +1,254 @@
+package smarthospital.model;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+public class Doctor {
+    private String doctorId;
+    private String name;
+    private String specialization;
+    private int slotsPerDay;
+    private final Set<String> defaultSlots;
+
+    public Doctor(String doctorId, String name, String specialization, int slotsPerDay) {
+        this.doctorId = doctorId;
+        this.name = name;
+        this.specialization = specialization;
+        this.slotsPerDay = slotsPerDay;
+        this.defaultSlots = new LinkedHashSet<String>();
+        String[] catalog = {"09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00"};
+        int n = Math.min(slotsPerDay, catalog.length);
+        for (int i = 0; i < n; i++) {
+            defaultSlots.add(catalog[i]);
+        }
+    }
+
+    public String getDoctorId() {
+        return doctorId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getSpecialization() {
+        return specialization;
+    }
+
+    public int getSlotsPerDay() {
+        return slotsPerDay;
+    }
+
+    public Set<String> getDefaultSlots() {
+        return new LinkedHashSet<String>(defaultSlots);
+    }
+
+    @Override
+    public String toString() {
+        return doctorId + " | " + name + " | " + specialization + " | slots/day=" + slotsPerDay;
+    }
+}
+
+package smarthospital.model;
+
+/**
+ * Base medicine entity. Subclasses provide dosage rules via polymorphism.
+ */
+public abstract class Medicine {
+    private String medicineId;
+    private String name;
+    private int stock;
+    private int reorderLevel;
+    private double unitPrice;
+
+    protected Medicine(String medicineId, String name, int stock, int reorderLevel, double unitPrice) {
+        this.medicineId = medicineId;
+        this.name = name;
+        this.stock = stock;
+        this.reorderLevel = reorderLevel;
+        this.unitPrice = unitPrice;
+    }
+
+    public String getMedicineId() {
+        return medicineId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getStock() {
+        return stock;
+    }
+
+    public void setStock(int stock) {
+        this.stock = stock;
+    }
+
+    public int getReorderLevel() {
+        return reorderLevel;
+    }
+
+    public void setReorderLevel(int reorderLevel) {
+        this.reorderLevel = reorderLevel;
+    }
+
+    public double getUnitPrice() {
+        return unitPrice;
+    }
+
+    public void setUnitPrice(double unitPrice) {
+        this.unitPrice = unitPrice;
+    }
+
+    public abstract String getType();
+
+    public abstract String getDosageInstructions();
+
+    public boolean isLowStock() {
+        return stock <= reorderLevel;
+    }
+
+    @Override
+    public String toString() {
+        return medicineId + " | " + name + " | " + getType() + " | stock=" + stock
+                + " | reorder=" + reorderLevel + " | Rs." + unitPrice;
+    }
+
+    public static Medicine create(String id, String name, String type, int stock, int reorder, double price) {
+        String t = type == null ? "TABLET" : type.trim().toUpperCase();
+        if (t.startsWith("SYR")) {
+            return new SyrupMedicine(id, name, stock, reorder, price);
+        }
+        return new TabletMedicine(id, name, stock, reorder, price);
+    }
+}
+
+---------------------------------------------------------------------------
+package smarthospital.model;
+
+/**
+ * Base patient entity. Subclasses apply consultation-fee waivers at run time (polymorphism).
+ */
+public abstract class Patient {
+    private String patientId;
+    private String name;
+    private int age;
+    private String phone;
+
+    protected Patient(String patientId, String name, int age, String phone) {
+        this.patientId = patientId;
+        this.name = name;
+        this.age = age;
+        this.phone = phone;
+    }
+
+    public String getPatientId() {
+        return patientId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public abstract String getCategory();
+
+    public abstract double getConsultationFee(double baseFee);
+
+    @Override
+    public String toString() {
+        return patientId + " | " + name + " | age " + age + " | " + getCategory() + " | " + phone;
+    }
+
+    public static Patient create(String id, String name, int age, String phone, String category) {
+        String cat = category == null ? "REGULAR" : category.trim().toUpperCase();
+        if (cat.startsWith("SENIOR")) {
+            return new SeniorCitizenPatient(id, name, age, phone);
+        }
+        if (cat.startsWith("PED") || cat.startsWith("CHILD")) {
+            return new PediatricPatient(id, name, age, phone);
+        }
+        return new RegularPatient(id, name, age, phone);
+    }
+}
+----------------------------------package smarthospital.model;
+
+public class Appointment {
+    private String appointmentId;
+    private String patientId;
+    private String doctorId;
+    private String slot;
+    private String status;
+    private String visitNotes;
+
+    public Appointment(String appointmentId, String patientId, String doctorId, String slot, String status) {
+        this.appointmentId = appointmentId;
+        this.patientId = patientId;
+        this.doctorId = doctorId;
+        this.slot = slot;
+        this.status = status;
+        this.visitNotes = "";
+    }
+
+    public String getAppointmentId() {
+        return appointmentId;
+    }
+
+    public String getPatientId() {
+        return patientId;
+    }
+
+    public String getDoctorId() {
+        return doctorId;
+    }
+
+    public String getSlot() {
+        return slot;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getVisitNotes() {
+        return visitNotes;
+    }
+
+    public void setVisitNotes(String visitNotes) {
+        this.visitNotes = visitNotes;
+    }
+
+    @Override
+    public String toString() {
+        return appointmentId + " | patient=" + patientId + " | doctor=" + doctorId
+                + " | slot=" + slot + " | " + status;
+    }
+}
